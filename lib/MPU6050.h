@@ -1,7 +1,7 @@
 // MPU6050 Library for ESP-32
 // Written by: Muhammad Ameer Hamza
 // Date of creation: 20-04-2024
-// Libraryb Includes Following:
+// Library Includes Following:
 //  ---------------------------------------------------------
 //  |   Functionality                         | Description |
 //  ---------------------------------------------------------
