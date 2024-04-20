@@ -40,7 +40,7 @@
 // https://github.com/ameerhamza987/ESP32_MPU6050
 
 #include <Arduino.h>
-#include "MPU6050.h" // Include your MPU6050 library
+#include <MPU6050.h> // Include your MPU6050 library
 #include <Wire.h>
 
 // Define I2C pins for ESP-32 (optional, default pins will work too)
