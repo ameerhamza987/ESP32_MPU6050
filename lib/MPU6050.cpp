@@ -15,8 +15,25 @@
 //   mpu.readGyro(gx, gy, gz);
 //   roll = mpu.calcRoll(ax, ay, az);
 //   pitch = mpu.calcPitch(ax, ay, az);
-//   mpu.AngelQuaternion(roll, pitch, yaw);
+//   mpu.AngelQuaternion(q0, q1, q2, q3, roll, pitch, yaw);
 //
+// Description:
+// This library provides a set of functions to interface with the MPU6050 IMU sensor over I2C using ESP-32. It includes functions for reading acceleration data, reading gyroscope data, calculating roll and pitch, and estimating angles from quaternions. The library is designed to be simple to use and integrates seamlessly with the Arduino framework.
+//
+// Usage:
+// - Include the library in your project:
+//   #include "MPU6050.h"
+//
+// - Create an instance of the MPU6050 class with the default I2C address (0x68):
+//   MPU6050 mpu;
+//
+// - Initialize the sensor in the setup() function:
+//   mpu.begin();
+//
+// - Use the library functions to read data and calculate angles in the loop() function:
+//   float ax, ay, az;
+//   float gx, gy, gz;
+//   float roll, pitch, yaw;
 //
 // Repository:
 // The source code for this library can be found on GitHub/GitLab at:
@@ -62,6 +79,7 @@ bool MPU6050::begin()
 void MPU6050::readAccel(float &accelX, float &accelY, float &accelZ)
 {
     // Read acceleration data from registers
+    int16_t accelXRaw, accelYRaw, accelZRaw;
     readMPU6050(0x3B, accelXRaw); // Register address 0x3B for accelerometer X
     readMPU6050(0x3D, accelYRaw); // Register address 0x3D for accelerometer Y
     readMPU6050(0x3F, accelZRaw); // Register address 0x3F for accelerometer Z
@@ -103,39 +121,41 @@ void MPU6050::readGyro(float &gyroX, float &gyroY, float &gyroZ)
 }
 
 // Calculate roll from accleroeter data
-float MPU6050::calcRoll(float accelX, float accelY, float accelZ) {
-    // different theires denotes different formulas for calculating roll from accelerometer data 
+float MPU6050::calcRoll(float accelX, float accelY, float accelZ)
+{
+    // different theires denotes different formulas for calculating roll from accelerometer data
     // formula to calculate the  Roll angle using Accelerometer Data i.e. arctan(ay/az) * 180/pi
     return atan2(accelY, accelZ) * RAD_TO_DEG;
 }
 
 // Calculate pitch from accleroeter data
-float MPU6050::calcPitch(float accelX, float accelY, float accelZ) {
-    // different theires denotes different formulas for calculating pitch from accelerometer data 
+float MPU6050::calcPitch(float accelX, float accelY, float accelZ)
+{
+    // different theires denotes different formulas for calculating pitch from accelerometer data
     // formula to calculate pitch angle using accelerometer data i.e. arctan(-ax/(ay^2 + az^2)) * 180/pi
     return atan2(-accelX, sqrt((accelY * accelY) + (accelZ * accelZ))) * RAD_TO_DEG;
 }
 
 // Estimate angle from quaternions
-void MPU6050::AngelQuaternion(float &roll, float &pitch, float &yaw) {
+void MPU6050::AngelQuaternion(float q0, float q1, float q2, float q3, float &roll, float &pitch, float &yaw)
+{
     // For quaternion-based angle estimation, you may use external libraries or reference the MPU6050 datasheet.
-    // Also the quaternion angel can only be estimated (not the exact values), since quaternion needs data of yaw 
+    // Also the quaternion angel can only be estimated (not the exact values), since quaternion needs data of yaw
     // yaw data is calaculted from magnetometer data
     // mpu6050 is only for gyro and accelero data
-
-    // Assuming quaternion values are read from the MPU6050 in q1, q2, q3, q4
+    // Assuming quaternion values are read from the MPU6050 in q0, q1, q2, q3
+    // int q0, q1, q2, q3;
 
     // Convert quaternions to roll, pitch, yaw angles
-    roll = atan2(2.0 * (q1 * q2 + q3 * q4), 1 - 2 * (q2 * q2 + q3 * q3));
-    pitch = asin(2.0 * (q1 * q3 - q4 * q2));
-    yaw = atan2(2.0 * (q1 * q4 + q2 * q3), 1 - 2 * (q3 * q3 + q4 * q4));
-    
+    roll = atan2(2.0 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 * q1 + q2 * q2));
+    pitch = asin(2.0 * (q0 * q2 - q3 * q1));
+    yaw = atan2(2.0 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 * q2 + q3 * q3));
+
     // Convert angles from radians to degrees
     roll *= RAD_TO_DEG;
     pitch *= RAD_TO_DEG;
     yaw *= RAD_TO_DEG;
 }
-
 
 // Private function to read data from MPU6050
 void MPU6050::readMPU6050(uint8_t regAddr, int16_t &data)
