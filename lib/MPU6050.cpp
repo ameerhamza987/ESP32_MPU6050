@@ -43,6 +43,16 @@
 #include <Arduino.h>
 #include <math.h>
 
+
+#define  PI 3.14159
+#define  RAD_TO_DEG  57.29577
+#define  AccelX_H_Addr  0x3B
+#define  AccelY_H_Addr  0x3D
+#define  AccelZ_H_Addr  0x3F
+#define  GyroX_H_Addr   0x43
+#define  GyroY_H_Addr   0x45
+#define  GyroZ_H_Addr   0x47
+
 // Constructor
 // MPU6050::MPU6050(uint8_t address) : i2cAddr(address) {}
 MPU6050::MPU6050() {}
@@ -82,9 +92,9 @@ void MPU6050::readAccel(float &accelX, float &accelY, float &accelZ)
 {
     // Read acceleration data from registers
     int16_t accelXRaw, accelYRaw, accelZRaw;
-    readMPU6050(0x3B, accelXRaw); // Register address 0x3B for accelerometer X
-    readMPU6050(0x3D, accelYRaw); // Register address 0x3D for accelerometer Y
-    readMPU6050(0x3F, accelZRaw); // Register address 0x3F for accelerometer Z
+    readMPU6050(AccelX_H_Addr, accelXRaw); // Register address 0x3B for accelerometer X
+    readMPU6050(AccelY_H_Addr, accelYRaw); // Register address 0x3D for accelerometer Y
+    readMPU6050(AccelZ_H_Addr, accelZRaw); // Register address 0x3F for accelerometer Z
 
     // Convert raw data to acceleration values
     accelX = accelXRaw / 16384.0; // Assuming MPU6050 set to +/-2g range
@@ -112,9 +122,9 @@ void MPU6050::readGyro(float &gyroX, float &gyroY, float &gyroZ)
 {
     // Read acceleration data from registers
     int16_t gyroXRaw, gyroYRaw, gyroZRaw;
-    readMPU6050(0x43, gyroXRaw); // Register address 0x43 for gyroscope X
-    readMPU6050(0x45, gyroYRaw); // Register address 0x45 for gyroscope Y
-    readMPU6050(0x47, gyroZRaw); // Register address 0x47 for gyroscope Z
+    readMPU6050(GyroX_H_Addr, gyroXRaw); // Register address 0x43 for gyroscope X
+    readMPU6050(GyroY_H_Addr, gyroYRaw); // Register address 0x45 for gyroscope Y
+    readMPU6050(GyroZ_H_Addr, gyroZRaw); // Register address 0x47 for gyroscope Z
 
     // Convert raw data to acceleration values
     gyroX = gyroXRaw / 131.0; // Assuming MPU6050 set to +/-250 degrees/s range
