@@ -5,11 +5,11 @@
 //  ---------------------------------------------------------
 //  |   Functionality                         | Description |
 //  ---------------------------------------------------------
-//  |       ReadAccel                         |Read        |
-//  |       ReadGyro                          |Read        |
-//  |       calculateRoll                     |Read        |
-//  |       calculatePitch                    |Read        |
-//  |       estimateAngleFromQuaternions      |Read        |
+//  |       readAccel                         |Read        |
+//  |       readGyro                          |Read        |
+//  |       calcRoll                          |Read        |
+//  |       calcPitch                         |Read        |
+//  |       AngelQuaternion                   |Read        |
 //  ---------------------------------------------------------
 //   mpu.readAccel(ax, ay, az);
 //   mpu.readGyro(gx, gy, gz);

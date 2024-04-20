@@ -5,11 +5,11 @@
 //  ---------------------------------------------------------
 //  |   Functionality                         | Description |
 //  ---------------------------------------------------------
-//  |       ReadAccel                         |Read        |
-//  |       ReadGyro                          |Read        |
-//  |       calculateRoll                     |Read        |
-//  |       calculatePitch                    |Read        |
-//  |       estimateAngleFromQuaternions      |Read        |
+//  |       readAccel                         |Read        |
+//  |       readGyro                          |Read        |
+//  |       calcRoll                          |Read        |
+//  |       calcPitch                         |Read        |
+//  |       AngelQuaternion                   |Read        |
 //  ---------------------------------------------------------
 //   mpu.readAccel(ax, ay, az);
 //   mpu.readGyro(gx, gy, gz);
@@ -23,20 +23,138 @@
 // https://github.com/ameerhamza987/ESP32_MPU6050
 
 #include "MPU6050.h"
+#include <Arduino.h>
 #include <math.h>
 
 // Constructor
 MPU6050::MPU6050(uint8_t address) : i2cAddr(address) {}
 
 // Initialize the MPU6050
-bool MPU6050::begin() {
+bool MPU6050::begin()
+{
     Wire.begin();
     // Initialize the MPU6050 with configuration from the datasheet where the Slave address for MPU6050 is 0x68
     Wire.beginTransmission(i2cAddr);
     Wire.write(0x6B); // Power Management 1 register, allows the user to configure the power mode and clock source.
-    Wire.write(0x6C); // Wake up MPU6050
+    Wire.write(0x00); // Wake up MPU6050
     Wire.endTransmission(true);
-    
+
     // Additional configurations can be added here if necessary
     return true;
+}
+
+/*
+ * Each 16-bit accelerometer measurement has a full scale defined in ACCEL_FS
+ * (Register 28). For each full scale setting, the accelerometers' sensitivity
+ * per LSB in ACCEL_xOUT is shown in the table below:
+ *
+ * <pre>
+ * AFS_SEL | Full Scale Range | LSB Sensitivity
+ * --------+------------------+----------------
+ * 0       | +/- 2g           | 16384 LSB/mg
+ * 1       | +/- 4g           | 8192 LSB/mg
+ * 2       | +/- 8g           | 4096 LSB/mg
+ * 3       | +/- 16g          | 2048 LSB/mg
+ * </pre>
+ */
+
+// Read raw acceleration data from MPU6050 and converting it into useable form
+void MPU6050::readAccel(float &accelX, float &accelY, float &accelZ)
+{
+    // Read acceleration data from registers
+    readMPU6050(0x3B, accelXRaw); // Register address 0x3B for accelerometer X
+    readMPU6050(0x3D, accelYRaw); // Register address 0x3D for accelerometer Y
+    readMPU6050(0x3F, accelZRaw); // Register address 0x3F for accelerometer Z
+
+    // Convert raw data to acceleration values
+    accelX = accelXRaw / 16384.0; // Assuming MPU6050 set to +/-2g range
+    accelY = accelYRaw / 16384.0;
+    accelZ = accelZRaw / 16384.0;
+}
+
+/*
+ * Each 16-bit gyroscope measurement has a full scale defined in FS_SEL
+ * (Register 27). For each full scale setting, the gyroscopes' sensitivity per
+ * LSB in GYRO_xOUT is shown in the table below:
+ *
+ * <pre>
+ * FS_SEL | Full Scale Range   | LSB Sensitivity
+ * -------+--------------------+----------------
+ * 0      | +/- 250 degrees/s  | 131 LSB/deg/s
+ * 1      | +/- 500 degrees/s  | 65.5 LSB/deg/s
+ * 2      | +/- 1000 degrees/s | 32.8 LSB/deg/s
+ * 3      | +/- 2000 degrees/s | 16.4 LSB/deg/s
+ * </pre>
+ */
+
+// Read raw gyroscope data from MPU6050 and converting it into useable form
+void MPU6050::readGyro(float &gyroX, float &gyroY, float &gyroZ)
+{
+    // Read acceleration data from registers
+    int16_t gyroXRaw, gyroYRaw, gyroZRaw;
+    readMPU6050(0x43, gyroXRaw); // Register address 0x43 for gyroscope X
+    readMPU6050(0x45, gyroYRaw); // Register address 0x45 for gyroscope Y
+    readMPU6050(0x47, gyroZRaw); // Register address 0x47 for gyroscope Z
+
+    // Convert raw data to acceleration values
+    gyroX = gyroXRaw / 131.0; // Assuming MPU6050 set to +/-250 degrees/s range
+    gyroY = gyroYRaw / 131.0;
+    gyroZ = gyroZRaw / 131.0;
+}
+
+// Calculate roll from accleroeter data
+float MPU6050::calcRoll(float accelX, float accelY, float accelZ) {
+    // different theires denotes different formulas for calculating roll from accelerometer data 
+    // formula to calculate the  Roll angle using Accelerometer Data i.e. arctan(ay/az) * 180/pi
+    return atan2(accelY, accelZ) * RAD_TO_DEG;
+}
+
+// Calculate pitch from accleroeter data
+float MPU6050::calcPitch(float accelX, float accelY, float accelZ) {
+    // different theires denotes different formulas for calculating pitch from accelerometer data 
+    // formula to calculate pitch angle using accelerometer data i.e. arctan(-ax/(ay^2 + az^2)) * 180/pi
+    return atan2(-accelX, sqrt((accelY * accelY) + (accelZ * accelZ))) * RAD_TO_DEG;
+}
+
+// Estimate angle from quaternions
+void MPU6050::AngelQuaternion(float &roll, float &pitch, float &yaw) {
+    // For quaternion-based angle estimation, you may use external libraries or reference the MPU6050 datasheet.
+    // Also the quaternion angel can only be estimated (not the exact values), since quaternion needs data of yaw 
+    // yaw data is calaculted from magnetometer data
+    // mpu6050 is only for gyro and accelero data
+
+    // Assuming quaternion values are read from the MPU6050 in q1, q2, q3, q4
+
+    // Convert quaternions to roll, pitch, yaw angles
+    roll = atan2(2.0 * (q1 * q2 + q3 * q4), 1 - 2 * (q2 * q2 + q3 * q3));
+    pitch = asin(2.0 * (q1 * q3 - q4 * q2));
+    yaw = atan2(2.0 * (q1 * q4 + q2 * q3), 1 - 2 * (q3 * q3 + q4 * q4));
+    
+    // Convert angles from radians to degrees
+    roll *= RAD_TO_DEG;
+    pitch *= RAD_TO_DEG;
+    yaw *= RAD_TO_DEG;
+}
+
+
+// Private function to read data from MPU6050
+void MPU6050::readMPU6050(uint8_t regAddr, int16_t &data)
+{
+    // Begin a transmission to the I2C device with the specified address
+    Wire.beginTransmission(i2cAddr);
+    // Write the register address to request data from
+    Wire.write(regAddr);
+    // End the transmission without releasing the bus
+    Wire.endTransmission(false);
+    // Request data from the I2C device starting from the register address, and request 2 bytes
+    Wire.requestFrom(i2cAddr, 2);
+    // Check if 2 bytes are available to read
+    if (Wire.available() == 2)
+    {
+        // Combine the two received bytes into a 16-bit integer
+        uint8_t highByte = (Wire.read() << 8);
+        uint8_t lowByte = Wire.read();
+        data = highByte | lowByte;
+        // data = (Wire.read() << 8) | Wire.read();
+    }
 }
