@@ -44,11 +44,13 @@
 #include <math.h>
 
 // Constructor
-MPU6050::MPU6050(uint8_t address) : i2cAddr(address) {}
+// MPU6050::MPU6050(uint8_t address) : i2cAddr(address) {}
+MPU6050::MPU6050() {}
 
 // Initialize the MPU6050
-bool MPU6050::begin()
+bool MPU6050::begin(uint8_t address)
 {
+    i2cAddr = address; // Set the device address
     Wire.begin();
     // Initialize the MPU6050 with configuration from the datasheet where the Slave address for MPU6050 is 0x68
     Wire.beginTransmission(i2cAddr);

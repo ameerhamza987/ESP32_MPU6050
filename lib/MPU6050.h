@@ -51,9 +51,10 @@ class MPU6050
 {
 
 public:
-    MPU6050(uint8_t address = mpuAddr0); // The default value of the register is 0x68
+    // MPU6050(uint8_t address = mpuAddr0); // The default value of the register is 0x68
+    MPU6050(); // The default value of the register is 0x68
     // Initialize the MPU6050
-    bool begin();
+    bool begin(uint8_t address);
     // fucntion to read acceleration data
     void readAccel(float &accelX, float &accelY, float &accelZ);
     // fucntion to read acceleration data

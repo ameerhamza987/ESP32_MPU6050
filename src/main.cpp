@@ -58,10 +58,10 @@ void setup()
 
     // Start I2C communication
     Wire.begin(I2C_SDA, I2C_SCL);
-    mpu.begin(); // Connect to the MPU6050 over I2C
+    mpu.begin(0x68); // Connect to the MPU6050 over I2C
 
     // Initialize MPU6050 sensor
-    if (!mpu.begin())
+    if (!mpu.begin(0x68))
     {
         Serial.println("Failed to initialize MPU6050 sensor");
         while (true)
